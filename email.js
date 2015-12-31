@@ -7,15 +7,28 @@ var queue = kue.createQueue({
         db:3
     }
 });
+
+function cycle( arr ){
+    var idx = 0;
+    return {
+        next: function(){
+            return arr[idx++ % arr.length ]
+        }
+    }
+}
+
+var priorities = cycle( ['low','low','low','low', 'low','critical' ] )
 console.log( 'sending %s email jobs', limit);
 
 var id = setInterval( function(){
     if( ++current >= limit ){
         clearInterval( id );
     }
+
+    var level = priorities.next()
     var email = queue.create('email',{
         to:'foo@mail.com'
-       ,title:'email job ' + Math.random()
+       ,title:'email job ' + level
        ,from:'test@mail.com'
        ,subject:'this is a test'
        ,body:'hello world'
@@ -34,6 +47,6 @@ var id = setInterval( function(){
     })
 
     
-    email.save();
+    email.priority( level ).save();
     
 }, 500 )
