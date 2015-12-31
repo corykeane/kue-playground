@@ -1,11 +1,15 @@
+'use strict';
 var kue = require('kue');
-var  app = require('express')();
-
-var queue = kue.createQueue({
-    redis:{
-        db:3
+var cluster = require('cluster');
+var os = require('os')
+if( cluster.isMaster ){
+    for(let x=0, len = os.cpus().length; x<len; x++){
+        cluster.fork()
     }
-});
-app.use( kue.app );
-app.listen( 3000 );
+}else{
+    kue.createQueue({redis:{db:3}})
+    kue.app.listen( 3000 );
+    console.log("worker %s started", process.pid )
+}
+
 
